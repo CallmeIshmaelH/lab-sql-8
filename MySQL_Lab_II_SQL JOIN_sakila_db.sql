@@ -96,17 +96,48 @@ group by A1.film_id, A1.actor_id, A2.actor_id;
 
 -- Get all pairs of customers that have rented the same film more than 3 times.
 
-select rental.customer_id, inventory.inventory_id, inventory.film_id, film.title, count( inventory.film_id) as 'number of times rented'
+select T1.customer_id, T2.customer_id, T1.inventory_id, T1.film_id, T1.title, T1.TimesRented
+from 
+(select rental.customer_id, inventory.inventory_id, inventory.film_id, film.title, count(inventory.film_id) as 'TimesRented'
 from rental
 join inventory 
 on rental.inventory_id = inventory.inventory_id
 join film 
 on inventory.film_id = film.film_id
 join customer 
-on customer.customer_id  = rental.customer_id 
-group by inventory.film_id, rental.customer_id
-order by rental.customer_id
-;
-
+on customer.customer_id  = rental.customer_id) as T1
+join 
+(select rental.customer_id, inventory.inventory_id, inventory.film_id, film.title, count( inventory.film_id) as 'Times Rented'
+from rental
+join inventory 
+on rental.inventory_id = inventory.inventory_id
+join film 
+on inventory.film_id = film.film_id
+join customer 
+on customer.customer_id  = rental.customer_id) as T2
+where T1.film_id = T2.film_id
+group by T1.customer_id, T2.customer_id;
+-- I don´t know where to go from here to be quite honest.
 
 -- For each film, list actor that has acted in more films.
+select tab1.actor_id, tab1.first_name, tab1.last_name, tab1.film_id, tab1.title
+from
+(select actor.actor_id, actor.first_name, actor.last_name, film.film_id, film.title 
+from film 
+join film_actor
+on film.film_id = film_actor.film_id 
+join actor 
+on film_actor.actor_id = actor.actor_id) as tab1
+join
+(select actor.actor_id, actor.first_name, actor.last_name, film.film_id, film.title 
+from film 
+join film_actor
+on film.film_id = film_actor.film_id 
+join actor 
+on film_actor.actor_id = actor.actor_id) as tab2
+where tab1.actor_id = tab2.actor_id and tab1.film_id <> tab2.film_id
+group by tab1.film_id, tab1.actor_id
+order by tab1.film_id;
+
+
+
